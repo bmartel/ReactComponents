@@ -41,7 +41,9 @@ module.exports = React.createClass({
     return {
       url: '',
       dataKey: 'data',
-      queryParamKeys: []
+      dataType: 'json',
+      queryParamKey: 'title',
+      queryAppend: ''
     };
   },
   
@@ -82,10 +84,9 @@ module.exports = React.createClass({
   //
   componentDidMount: function () {
     // Detect whether url points to a json file or an actual web api
-    var matchJson = RegExp('.json');
-
+    var matchJson = RegExp('^[\\w-_\.%\/]*.json$');
     if(matchJson.exec(this.props.url)) {
-      this.setState({request: 'json'});
+      this.setState({request: 'file'});
     }else {
       this.setState({request: 'web'});
     }
@@ -161,26 +162,27 @@ module.exports = React.createClass({
     if(this.state.request == 'web') {
       this.searchWeb(text);
     }
-    else if(this.state.request == 'json') {
+    else if(this.state.request == 'file') {
       this.searchJson(text);
     }
   },
   searchWeb: function(text) {
+    if(!text) {
+      text = '';
+    }
+    var searchText = new RegExp('\[\['+ this.props.queryParamKey+'\]\]');
+    var requestUrl = this.props.url.replace(searchText, encodeURIComponent(text));
+    console.log(requestUrl);
+
     $.ajax({
-      url: this.props.url,
-      dataType: this.state.request,
+      url: requestUrl,
+      dataType: this.props.dataType,
       success: function(data) {
         var searchReturn = [];
-
-        data[this.props.dataKey].forEach(function(searchResult, index){
-
-            if(searchResult && searchResult.name){
-              if(text.length > 0 && textMatch.exec(searchResult.name)){ 
-                searchReturn.push(searchResult); 
-              }
-            }
-
-        });
+        console.log(data);
+        if(data && data[this.props.dataKey] && data[this.props.dataKey] instanceof array){
+          searchReturn = data[this.props.dataKey];
+        }
 
         this.setState({data: searchReturn});
 
@@ -196,7 +198,7 @@ module.exports = React.createClass({
 
     $.ajax({
       url: this.props.url,
-      dataType: this.state.request,
+      dataType: this.props.dataType,
       success: function(data) {
         var searchReturn = [];
 

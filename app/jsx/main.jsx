@@ -12,3 +12,10 @@ React.renderComponent(
   document.getElementById('components')
   /* jshint ignore:end */
 );
+
+// React.renderComponent(
+//   /* jshint ignore:start */
+//   <FilterBox queryParamKey="title" url="http://en.wikipedia.org/w/api.php?format=json&action=query&titles=[[title]]&prop=revisions&rvprop=content"/>,
+//   document.getElementById('components')
+//   /* jshint ignore:end */
+// );

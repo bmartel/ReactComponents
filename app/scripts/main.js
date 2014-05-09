@@ -81,7 +81,9 @@ module.exports = React.createClass({displayName: 'exports',
     return {
       url: '',
       dataKey: 'data',
-      queryParamKeys: []
+      dataType: 'json',
+      queryParamKey: 'title',
+      queryAppend: ''
     };
   },
   
@@ -122,10 +124,9 @@ module.exports = React.createClass({displayName: 'exports',
   //
   componentDidMount: function () {
     // Detect whether url points to a json file or an actual web api
-    var matchJson = RegExp('.json');
-
+    var matchJson = RegExp('^[\\w-_\.%\/]*.json$');
     if(matchJson.exec(this.props.url)) {
-      this.setState({request: 'json'});
+      this.setState({request: 'file'});
     }else {
       this.setState({request: 'web'});
     }
@@ -201,26 +202,27 @@ module.exports = React.createClass({displayName: 'exports',
     if(this.state.request == 'web') {
       this.searchWeb(text);
     }
-    else if(this.state.request == 'json') {
+    else if(this.state.request == 'file') {
       this.searchJson(text);
     }
   },
   searchWeb: function(text) {
+    if(!text) {
+      text = '';
+    }
+    var searchText = new RegExp('\[\['+ this.props.queryParamKey+'\]\]');
+    var requestUrl = this.props.url.replace(searchText, encodeURIComponent(text));
+    console.log(requestUrl);
+
     $.ajax({
-      url: this.props.url,
-      dataType: this.state.request,
+      url: requestUrl,
+      dataType: this.props.dataType,
       success: function(data) {
         var searchReturn = [];
-
-        data[this.props.dataKey].forEach(function(searchResult, index){
-
-            if(searchResult && searchResult.name){
-              if(text.length > 0 && textMatch.exec(searchResult.name)){ 
-                searchReturn.push(searchResult); 
-              }
-            }
-
-        });
+        console.log(data);
+        if(data && data[this.props.dataKey] && data[this.props.dataKey] instanceof array){
+          searchReturn = data[this.props.dataKey];
+        }
 
         this.setState({data: searchReturn});
 
@@ -236,7 +238,7 @@ module.exports = React.createClass({displayName: 'exports',
 
     $.ajax({
       url: this.props.url,
-      dataType: this.state.request,
+      dataType: this.props.dataType,
       success: function(data) {
         var searchReturn = [];
 
@@ -629,5 +631,12 @@ React.renderComponent(
   document.getElementById('components')
   /* jshint ignore:end */
 );
+
+// React.renderComponent(
+//   /* jshint ignore:start */
+//   <FilterBox queryParamKey="title" url="http://en.wikipedia.org/w/api.php?format=json&action=query&titles=[[title]]&prop=revisions&rvprop=content"/>,
+//   document.getElementById('components')
+//   /* jshint ignore:end */
+// );
 
 },{"./app.jsx":1,"./filter-box.jsx":2}]},{},[5])
